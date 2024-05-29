@@ -1,0 +1,53 @@
+const puppeteer = require('puppeteer');
+
+(async () => {
+    const browser = await puppeteer.launch({ headless: false });
+    const page = await browser.newPage();
+
+    try {
+      
+        console.log('Navigating to DuckDuckGo...');
+        await page.goto('https://duckduckgo.com');
+
+       
+        const searchQuery = 'Puppeteer'; 
+        console.log(`Searching for: ${searchQuery}`);
+
+        console.log('Typing search query...');
+        await page.type('input#searchbox_input', searchQuery, { delay: 100 });
+        await page.keyboard.press('Enter');
+
+     
+        console.log('Waiting for search results...');
+        await page.waitForSelector('div.results');
+
+    
+        console.log('Extracting search results...');
+        const searchResults = await page.evaluate(() => {
+            const results = [];
+            const elements = document.querySelectorAll('h2');
+            elements.forEach(element => {
+                const title = element.querySelector('h2.result__title')?.textContent.trim();
+                const url = element.querySelector('a.result__a')?.href;
+                if (title && url) {
+                    results.push({ title, url });
+                }
+            });
+            return results;
+        });
+
+ 
+        console.log('Search Results:');
+        searchResults.forEach((result, index) => {
+            console.log(`${index + 1}. Title: ${result.title}`);
+            console.log(`   URL: ${result.url}`);
+            console.log('1');
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+     
+        await browser.close()
+    }
+})();
